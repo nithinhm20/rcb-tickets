@@ -1,0 +1,35 @@
+name: RCB Ticket Monitor
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # Every 5 minutes (Subject to GitHub Actions delays)
+  workflow_dispatch:         # Manual trigger
+  push:                      # Wakes up the scheduler on new commits
+    branches:
+      - main
+
+jobs:
+  check-tickets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install playwright
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Run ticket monitor
+        env:
+          ZOHO_ADDRESS: ${{ secrets.ZOHO_ADDRESS }}
+          ZOHO_APP_PASSWORD: ${{ secrets.ZOHO_APP_PASSWORD }}
+          OUTLOOK_ADDRESS: ${{ secrets.OUTLOOK_ADDRESS }}
+        run: python monitor.py
